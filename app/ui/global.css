@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Green hover/selected styles */
+@layer utilities {
+  .bg-nav-selected {
+    @apply bg-green-50;
+  }
+  .text-nav-selected {
+    @apply text-green-600;
+  }
+  .hover\:bg-nav-hover:hover {
+    @apply bg-green-50;
+  }
+  .hover\:text-nav-hover:hover {
+    @apply text-green-600;
+  }
+}
