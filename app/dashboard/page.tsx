@@ -1,6 +1,6 @@
 import { Card } from "@/app/ui/dashboard/cards";
 import { lusitana } from "@/app/ui/fonts";
-import { fetchVacationSummary } from "../lib/vacation-data";
+import { fetchVacationSummary } from "../lib/db/services/vacation-data";
 
 export default async function Page() {
 

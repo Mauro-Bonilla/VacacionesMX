@@ -1,6 +1,6 @@
 import postgres from 'postgres';
-import { userMock } from '../_mocks/user';
-import { VacationBalance } from './models/vacationBalance';
+import { userMock } from '../../../_mocks/user';
+import { VacationBalance } from '../models/vacationBalance';
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
