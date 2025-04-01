@@ -1,6 +1,8 @@
 import { Card } from "@/app/ui/dashboard/cards";
 import { lusitana } from "@/app/ui/fonts";
 import { fetchVacationSummary } from "../lib/db/services/get-ordinary-vacation-summary";
+import { fetchUserRequests } from "../lib/db/services/get-vacation-request-data";
+import VacationRequestTable from "../ui/components/vacation-requests/vacation-request-table";
 
 export default async function Page() {
 
@@ -10,6 +12,8 @@ export default async function Page() {
   }
 
   const { entitledDays, usedDays, availableVacations, periodEnd} = vacationSummary;
+  const requests = await fetchUserRequests();
+  console.log(requests);
 
   return (
     <main>
@@ -30,6 +34,9 @@ export default async function Page() {
       <h1 className={`${lusitana.className} mb-4 text-xl md:text-2xl`}>
         Mis Solicitudes de vacaciones
       </h1>
+      <VacationRequestTable 
+        requests={requests}>
+        </VacationRequestTable>
     </main>
   );
 }

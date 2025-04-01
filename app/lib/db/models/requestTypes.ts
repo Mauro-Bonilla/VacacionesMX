@@ -3,7 +3,7 @@
 /**
  * Represents the possible statuses for a vacation request
  */
-export type RequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'COMPLETED';
+export type RequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED' ;
 
 /**
  * Interface representing a vacation request with its details
