@@ -8,7 +8,7 @@ export default function CompanyLogo() {
     >
       <div className="relative">
         <Image
-          src="/my-company-logo.svg"
+          src="/logo-generic.svg"
           width={120}
           height={50}
           className="w-[216px] md:w-[240px] h-auto" 

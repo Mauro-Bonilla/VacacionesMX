@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Box, 
   Button, 
@@ -29,6 +29,7 @@ import {
   GridToolbarProps,
 } from '@mui/x-data-grid';
 import type { RequestStatus, VacationRequest } from "@/app/lib/db/models/requestTypes";
+import { VacationTableSkeleton } from './VacationTableSkeleton';
 
 // Define the column interface
 interface ColumnDef {
@@ -42,7 +43,8 @@ const columns: ColumnDef[] = [
   { name: "TIPO", uid: "leave_type_name", sortable: true },
   { name: "FECHA INICIO", uid: "start_date", sortable: true },
   { name: "FECHA FIN", uid: "end_date", sortable: true },
-  { name: "DÍAS", uid: "total_days", sortable: true },
+  { name: "DÍAS HÁBILES", uid: "total_days", sortable: true },
+  { name: "DÍAS CALENDARIO", uid: "calendar_days", sortable: true },
   { name: "ESTADO", uid: "status", sortable: true },
   { name: "FECHA SOLICITUD", uid: "created_at", sortable: true },
 ];
@@ -72,11 +74,12 @@ function formatDate(dateString: string | Date): string {
   // Check if date is valid
   if (isNaN(date.getTime())) return '';
   
-  return date.toLocaleDateString("es-MX", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+  // Use a fixed format that won't change between server and client
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = date.toLocaleString('es-MX', { month: 'short' });
+  const year = date.getFullYear();
+  
+  return `${day} ${month} ${year}`;
 }
 
 // Translate status for display
@@ -163,7 +166,6 @@ function CustomToolbar({ onStatusFilterChange, activeFilters }: CustomToolbarPro
           </>
         )}
       </Box>
-
       <Stack 
         direction={isMobile ? "column" : "row"} 
         spacing={1}
@@ -216,7 +218,7 @@ function CustomToolbar({ onStatusFilterChange, activeFilters }: CustomToolbarPro
                 size="small"
                 sx={{ mr: 1, fontWeight: 500 }}
               />
-              {status.name}
+
             </MenuItem>
           ))}
         </Menu>
@@ -266,7 +268,6 @@ const theme = createTheme({
         },
       },
     },
-    // Note: MuiDataGrid styling is moved to the Box sx prop for compatibility
   },
 });
 
@@ -276,9 +277,36 @@ interface VacationRequestTableProps {
 }
 
 export function VacationRequestTable({ requests = [], isAdmin = false }: VacationRequestTableProps) {
+  // Use client-side only rendering to avoid hydration issues
+  const [isClient, setIsClient] = useState(false);
+  
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+  
+  // Get theme after component mounts
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
+  
+  // Use state for responsive behavior instead of useMediaQuery directly
+  const [isMobile, setIsMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
+  
+  // Update responsive state only on client
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 600);
+      setIsTablet(window.innerWidth >= 600 && window.innerWidth < 900);
+    };
+    
+    // Set initial values
+    handleResize();
+    
+    // Add event listener
+    window.addEventListener('resize', handleResize);
+    
+    // Cleanup
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   
   // State for active filters
   const [activeStatusFilters, setActiveStatusFilters] = useState<RequestStatus[]>([]);
@@ -299,7 +327,7 @@ export function VacationRequestTable({ requests = [], isAdmin = false }: Vacatio
   const dataGridColumns: GridColDef[] = useMemo(() => [
     { 
       field: 'leave_type_name', 
-      headerName: 'TIPO', 
+      headerName: 'TIPO DE VACACIONES', 
       flex: 1,
       minWidth: 150,
       renderCell: (params: GridRenderCellParams<VacationRequest>) => renderAlignedCell(
@@ -330,8 +358,18 @@ export function VacationRequestTable({ requests = [], isAdmin = false }: Vacatio
     },
     { 
       field: 'total_days', 
-      headerName: 'DÍAS', 
-      width: 80,
+      headerName: 'DÍAS HÁBILES', 
+      width: 140,
+      renderCell: (params) => renderAlignedCell(
+        <Typography variant="body2">
+          {params.value} días
+        </Typography>
+      ),
+    },
+    { 
+      field: 'calendar_days', 
+      headerName: 'DÍAS CALENDARIO', 
+      width: 160,
       renderCell: (params) => renderAlignedCell(
         <Typography variant="body2">
           {params.value} días
@@ -374,29 +412,31 @@ export function VacationRequestTable({ requests = [], isAdmin = false }: Vacatio
       ),
     },
   ], []);
-
+  
   // For rows, we need to ensure each row has a unique id
   const rows = useMemo(() => {
     if (!requests || !Array.isArray(requests)) return [];
     
     return requests.map((request) => {
       // Create a unique ID for the row if it doesn't already have one
+      // Use a deterministic approach to generate IDs
       return {
         ...request,
-        id: request.id || `${request.user_rfc || 'unknown'}-${new Date(request.created_at).getTime() || Date.now()}`
+        id: request.id || `${request.user_rfc || 'unknown'}-${request.created_at || ''}`
       };
     });
   }, [requests]);
-
-  // Define default column visibility (without actions)
-  const defaultColumnVisibility = useMemo(() => {
+  
+  // Define column visibility based on screen size
+  const columnVisibilityModel = useMemo(() => {
     if (isMobile) {
       return {
         leave_type_name: true,
         status: true,
-        start_date: false,
+        start_date: true,
         end_date: false,
         total_days: false,
+        calendar_days: false,
         created_at: false
       };
     }
@@ -404,9 +444,10 @@ export function VacationRequestTable({ requests = [], isAdmin = false }: Vacatio
       return {
         leave_type_name: true,
         start_date: true,
+        end_date: true,
         status: true,
-        end_date: false,
         total_days: false,
+        calendar_days: false,
         created_at: true
       };
     }
@@ -415,11 +456,12 @@ export function VacationRequestTable({ requests = [], isAdmin = false }: Vacatio
       start_date: true,
       end_date: true,
       total_days: true,
+      calendar_days: true,
       status: true,
       created_at: true
     };
   }, [isMobile, isTablet]);
-
+  
   // Filter rows based on selected status filters
   const filteredRows = useMemo(() => {
     if (activeStatusFilters.length === 0) {
@@ -428,17 +470,12 @@ export function VacationRequestTable({ requests = [], isAdmin = false }: Vacatio
     
     return rows.filter(row => activeStatusFilters.includes(row.status as RequestStatus));
   }, [rows, activeStatusFilters]);
-
+  
   // Handle status filter changes
   const handleStatusFilterChange = (statuses: RequestStatus[]) => {
     setActiveStatusFilters(statuses);
   };
-
-  // Ensure column text does not get truncated with ellipsis
-  const columnVisiblityModelWithWrapping = { 
-    ...defaultColumnVisibility,
-  };
-
+  
   // Create a component that includes both the custom toolbar and its props
   function CustomToolbarWithProps(props: GridToolbarProps) {
     return (
@@ -449,7 +486,12 @@ export function VacationRequestTable({ requests = [], isAdmin = false }: Vacatio
       />
     );
   }
-
+  
+  // Only render the component on the client side to avoid hydration mismatch
+  if (!isClient) {
+    return <VacationTableSkeleton />;
+  }
+  
   return (
     <ThemeProvider theme={theme}>
       <Box sx={{ 
@@ -507,9 +549,10 @@ export function VacationRequestTable({ requests = [], isAdmin = false }: Vacatio
               paginationModel: { page: 0, pageSize: 5 },
             },
             columns: {
-              columnVisibilityModel: columnVisiblityModelWithWrapping,
+              columnVisibilityModel: columnVisibilityModel,
             },
           }}
+          columnVisibilityModel={columnVisibilityModel}
           sx={{
             '& .MuiDataGrid-columnHeader': {
               whiteSpace: 'normal',
