@@ -1,9 +1,17 @@
-// app/lib/models/requestTypes.ts
-
 /**
  * Represents the possible statuses for a vacation request
  */
-export type RequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED' ;
+export type RequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
+
+/**
+ * Interface for day counting details
+ */
+export interface DayDetails {
+  calendar_days: number;
+  working_days: number;
+  weekends: number;
+  holidays: number;
+}
 
 /**
  * Interface representing a vacation request with its details
@@ -16,7 +24,11 @@ export interface VacationRequest {
   color_code?: string;
   start_date: Date;
   end_date: Date;
+  // String representations for consistent display
+  start_date_string?: string;
+  end_date_string?: string;
   total_days: number;
+  calendar_days?: number;
   status: RequestStatus;
   notes: string | null;
   created_at: Date;
@@ -26,6 +38,7 @@ export interface VacationRequest {
   anniversary_year: number | null;
   balance_at_request: number | null;
   rejection_reason: string | null;
+  day_details?: DayDetails;
 }
 
 /**
