@@ -1,12 +1,13 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { userMock } from '@/app//_mocks/user';
+import { userMock } from '@/app/_mocks/user';
 import { createVacationRequest } from '@/app/lib/db/services/create-vacation-request';
-import { fetchUserVacationBalances, LeaveTypeBalance } from '@/app/lib/db/services/get-user-vacation-balance';
+import { fetchUserVacationBalances } from '@/app/lib/db/services/get-user-vacation-balance';
 import { fetchLeaveTypes, getLeaveTypeById } from '@/app/lib/db/services/get-leave-types';
 import { fetchHolidaysForPeriod } from '@/app/lib/db/services/get-holidays';
 import { LeaveType } from '@/app/lib/db/models/leaveTypes';
+import { LeaveTypeBalance } from '@/app/lib/db/models/vacationBalance';
 
 /**
  * Gets all leave types from the database
