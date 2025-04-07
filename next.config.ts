@@ -9,8 +9,8 @@ const nextConfig: NextConfig = {
         'localhost:3000',
         // Add your specific domain if you know it
         // e.g. '*.devtunnels.ms', 'your-app.your-domain.com'
-        // Or use a wildcard to allow any origin (less secure)
-        '*'
+        // Add trusted domains to allow specific origins
+        '*.devtunnels.ms'
       ],
     },
   },
