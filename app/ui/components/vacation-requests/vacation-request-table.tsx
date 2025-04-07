@@ -14,7 +14,7 @@ import {
   MenuItem,
   IconButton,
   Tooltip,
-  Divider,
+
 } from '@mui/material';
 import { 
   Add as AddIcon,
@@ -30,6 +30,7 @@ import {
 } from '@mui/x-data-grid';
 import type { RequestStatus, VacationRequest } from "@/app/lib/db/models/requestTypes";
 import { VacationTableSkeleton } from './VacationTableSkeleton';
+import { useRouter } from 'next/navigation';
 
 // Define the column interface
 interface ColumnDef {
@@ -97,20 +98,18 @@ interface CustomToolbarProps extends GridToolbarProps {
 function CustomToolbar({ onStatusFilterChange, activeFilters }: CustomToolbarProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const router = useRouter();
   
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   
-  // Handle filter menu opening
   const handleFilterClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
   };
   
-  // Handle filter menu closing
   const handleFilterClose = () => {
     setAnchorEl(null);
   };
   
-  // Apply status filter
   const handleStatusFilter = (status: RequestStatus) => {
     const newActiveFilters = activeFilters.includes(status)
       ? activeFilters.filter(s => s !== status)
@@ -120,130 +119,141 @@ function CustomToolbar({ onStatusFilterChange, activeFilters }: CustomToolbarPro
     handleFilterClose();
   };
   
-  // Clear all filters
   const clearFilters = () => {
     onStatusFilterChange([]);
   };
 
-  return (
-    <GridToolbarContainer sx={{ 
-      p: 2, 
-      display: 'flex', 
-      flexDirection: isMobile ? 'column' : 'row',
-      gap: isMobile ? 1 : 0
-    }}>
-      <Box sx={{ 
-        flexGrow: 1, 
-        mb: isMobile ? 1 : 0,
-        display: 'flex',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        gap: 1
-      }}>
-        {/* Show currently active filters as chips */}
-        {activeFilters.length > 0 && (
-          <>
-            <Typography variant="body2" sx={{ mr: 1 }}>Filtros activos:</Typography>
-            {activeFilters.map(status => (
-              <Chip 
-                key={status}
-                label={getStatusName(status)}
-                color={statusColorMap[status]}
-                size="small"
-                onDelete={() => handleStatusFilter(status)}
-                sx={{ fontWeight: 500 }}
-              />
-            ))}
-            <Tooltip title="Limpiar filtros">
-              <IconButton 
-                size="small" 
-                onClick={clearFilters}
-                sx={{ color: '#00754a' }}
-              >
-                <CloseIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          </>
-        )}
-      </Box>
-      <Stack 
-        direction={isMobile ? "column" : "row"} 
-        spacing={1}
-        sx={{ width: isMobile ? '100%' : 'auto' }}
-      >
-        <Button 
-          startIcon={<FilterAltIcon />}
-          onClick={handleFilterClick}
-          sx={{ 
-            fontWeight: 500,
-            width: isMobile ? '100%' : 'auto',
-            justifyContent: isMobile ? 'flex-start' : 'center',
-            color: activeFilters.length > 0 ? '#00754a' : 'inherit',
-            borderColor: activeFilters.length > 0 ? '#00754a' : 'inherit',
-            m: isMobile ? '8px 0' : '0 16px',
-            padding: '8px 16px',
-          }}
-        >
-          FILTRAR
-        </Button>
-        <Menu
-          anchorEl={anchorEl}
-          open={Boolean(anchorEl)}
-          onClose={handleFilterClose}
-          PaperProps={{
-            sx: { 
-              width: 200,
-              maxHeight: 300,
-              padding: 1,
-            }
-          }}
-        >
-          <Typography variant="subtitle2" sx={{ px: 2, mb: 1, fontWeight: 600 }}>
-            Filtrar por estado
-          </Typography>
-          <Divider sx={{ mb: 1 }} />
-          {statusOptions.map(status => (
-            <MenuItem 
-              key={status.uid} 
-              onClick={() => handleStatusFilter(status.uid as RequestStatus)}
-              sx={{ 
-                backgroundColor: activeFilters.includes(status.uid as RequestStatus) 
-                  ? 'rgba(0, 117, 74, 0.08)' 
-                  : 'transparent',
-              }}
-            >
-              <Chip 
-                label={status.name}
-                color={statusColorMap[status.uid as RequestStatus]}
-                size="small"
-                sx={{ mr: 1, fontWeight: 500 }}
-              />
+  const handleNewRequest = () => {
+    try {
+      router.push('/dashboard/form');
+    } catch (error) {
+      window.location.href = '/dashboard/form';
+    }
+  };
 
-            </MenuItem>
-          ))}
-        </Menu>
-        <Button 
-          variant="contained"
-          startIcon={<AddIcon />}
-          sx={{ 
-            ml: isMobile ? 0 : 1, 
-            backgroundColor: '#00754a',
-            '&:hover': {
-              backgroundColor: '#006040',
-            },
-            color: 'white',
-            width: isMobile ? '100%' : 'auto',
-            fontWeight: 500,
-          }}
+  return (
+    <Box sx={{ 
+      p: 2,
+      mb: 3,
+      borderRadius: 1,
+      boxShadow: '0px 2px 4px -1px rgba(0,0,0,0.1)',
+    }}>
+      <GridToolbarContainer sx={{ 
+        p: 0, 
+        display: 'flex', 
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? 1 : 0
+      }}>
+        <Box sx={{ 
+          flexGrow: 1, 
+          mb: isMobile ? 3 : 4,
+          display: 'flex',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 1
+        }}>
+          {activeFilters.length > 0 && (
+            <>
+              <Typography variant="body2" sx={{ mr: 1 }}>Filtros activos:</Typography>
+              {activeFilters.map(status => (
+                <Chip 
+                  key={status}
+                  label={getStatusName(status)}
+                  color={statusColorMap[status]}
+                  size="small"
+                  onDelete={() => handleStatusFilter(status)}
+                  sx={{ fontWeight: 500 }}
+                />
+              ))}
+              <Tooltip title="Limpiar filtros">
+                <IconButton 
+                  size="small" 
+                  onClick={clearFilters}
+                  sx={{ color: '#00754a' }}
+                >
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </>
+          )}
+        </Box>
+        <Stack 
+          direction={isMobile ? "column" : "row"} 
+          spacing={1}
+          sx={{ width: isMobile ? '100%' : 'auto' }}
         >
-          NUEVA SOLICITUD
-        </Button>
-      </Stack>
-    </GridToolbarContainer>
+          <Button 
+            startIcon={<FilterAltIcon />}
+            onClick={handleFilterClick}
+            sx={{ 
+              fontWeight: 500,
+              width: isMobile ? '100%' : 'auto',
+              justifyContent: isMobile ? 'flex-start' : 'center',
+              color: activeFilters.length > 0 ? '#00754a' : 'inherit',
+              borderColor: activeFilters.length > 0 ? '#00754a' : 'inherit',
+              m: isMobile ? '8px 0' : '0 16px',
+              padding: '8px 16px',
+            }}
+          >
+            FILTRAR
+          </Button>
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleFilterClose}
+            PaperProps={{
+              sx: { 
+                width: 200,
+                maxHeight: 300,
+                padding: 1,
+              }
+            }}
+          >
+            <Typography variant="subtitle2" sx={{ px: 2, mb: 1, fontWeight: 600 }}>
+              Filtrar por estado
+            </Typography>
+            {statusOptions.map(status => (
+              <MenuItem 
+                key={status.uid} 
+                onClick={() => handleStatusFilter(status.uid as RequestStatus)}
+                sx={{ 
+                  backgroundColor: activeFilters.includes(status.uid as RequestStatus) 
+                    ? 'rgba(0, 117, 74, 0.08)' 
+                    : 'transparent',
+                }}
+              >
+                <Chip 
+                  label={status.name}
+                  color={statusColorMap[status.uid as RequestStatus]}
+                  size="small"
+                  sx={{ mr: 1, fontWeight: 500 }}
+                />
+              </MenuItem>
+            ))}
+          </Menu>
+          <Button 
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleNewRequest}
+            sx={{ 
+              ml: isMobile ? 0 : 1, 
+              backgroundColor: '#00754a',
+              '&:hover': {
+                backgroundColor: '#006040',
+              },
+              color: 'white',
+              width: isMobile ? '100%' : 'auto',
+              fontWeight: 500,
+            }}
+          >
+            NUEVA SOLICITUD
+          </Button>
+        </Stack>
+      </GridToolbarContainer>
+    </Box>
   );
 }
 
-// Create MUI theme with our green color
 const theme = createTheme({
   palette: {
     primary: {
@@ -277,41 +287,30 @@ interface VacationRequestTableProps {
 }
 
 export function VacationRequestTable({ requests = [], isAdmin = false }: VacationRequestTableProps) {
-  // Use client-side only rendering to avoid hydration issues
   const [isClient, setIsClient] = useState(false);
+  const router = useRouter();
   
   useEffect(() => {
     setIsClient(true);
   }, []);
   
-  // Get theme after component mounts
   const theme = useTheme();
-  
-  // Use state for responsive behavior instead of useMediaQuery directly
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
   
-  // Update responsive state only on client
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 600);
       setIsTablet(window.innerWidth >= 600 && window.innerWidth < 900);
     };
     
-    // Set initial values
     handleResize();
-    
-    // Add event listener
     window.addEventListener('resize', handleResize);
-    
-    // Cleanup
     return () => window.removeEventListener('resize', handleResize);
   }, []);
   
-  // State for active filters
   const [activeStatusFilters, setActiveStatusFilters] = useState<RequestStatus[]>([]);
   
-  // Cell rendering helper for consistent vertical alignment
   const renderAlignedCell = (content: React.ReactNode) => (
     <Box sx={{ 
       height: '100%', 
@@ -323,7 +322,6 @@ export function VacationRequestTable({ requests = [], isAdmin = false }: Vacatio
     </Box>
   );
   
-  // Configure DataGrid columns based on the data structure
   const dataGridColumns: GridColDef[] = useMemo(() => [
     { 
       field: 'leave_type_name', 
@@ -413,13 +411,10 @@ export function VacationRequestTable({ requests = [], isAdmin = false }: Vacatio
     },
   ], []);
   
-  // For rows, we need to ensure each row has a unique id
   const rows = useMemo(() => {
     if (!requests || !Array.isArray(requests)) return [];
     
     return requests.map((request) => {
-      // Create a unique ID for the row if it doesn't already have one
-      // Use a deterministic approach to generate IDs
       return {
         ...request,
         id: request.id || `${request.user_rfc || 'unknown'}-${request.created_at || ''}`
@@ -427,30 +422,8 @@ export function VacationRequestTable({ requests = [], isAdmin = false }: Vacatio
     });
   }, [requests]);
   
-  // Define column visibility based on screen size
+  // Modified to show all columns in all views
   const columnVisibilityModel = useMemo(() => {
-    if (isMobile) {
-      return {
-        leave_type_name: true,
-        status: true,
-        start_date: true,
-        end_date: false,
-        total_days: false,
-        calendar_days: false,
-        created_at: false
-      };
-    }
-    if (isTablet) {
-      return {
-        leave_type_name: true,
-        start_date: true,
-        end_date: true,
-        status: true,
-        total_days: false,
-        calendar_days: false,
-        created_at: true
-      };
-    }
     return {
       leave_type_name: true,
       start_date: true,
@@ -460,9 +433,8 @@ export function VacationRequestTable({ requests = [], isAdmin = false }: Vacatio
       status: true,
       created_at: true
     };
-  }, [isMobile, isTablet]);
+  }, []);
   
-  // Filter rows based on selected status filters
   const filteredRows = useMemo(() => {
     if (activeStatusFilters.length === 0) {
       return rows;
@@ -471,12 +443,10 @@ export function VacationRequestTable({ requests = [], isAdmin = false }: Vacatio
     return rows.filter(row => activeStatusFilters.includes(row.status as RequestStatus));
   }, [rows, activeStatusFilters]);
   
-  // Handle status filter changes
   const handleStatusFilterChange = (statuses: RequestStatus[]) => {
     setActiveStatusFilters(statuses);
   };
   
-  // Create a component that includes both the custom toolbar and its props
   function CustomToolbarWithProps(props: GridToolbarProps) {
     return (
       <CustomToolbar 
@@ -487,7 +457,6 @@ export function VacationRequestTable({ requests = [], isAdmin = false }: Vacatio
     );
   }
   
-  // Only render the component on the client side to avoid hydration mismatch
   if (!isClient) {
     return <VacationTableSkeleton />;
   }
@@ -496,11 +465,11 @@ export function VacationRequestTable({ requests = [], isAdmin = false }: Vacatio
     <ThemeProvider theme={theme}>
       <Box sx={{ 
         width: '100%',
-        pb: 5, // Increased bottom padding on the entire component
+        pb: 5,
         '& .MuiDataGrid-root': {
           border: 'none',
           '& .MuiDataGrid-row': {
-            minHeight: '60px !important', // Ensure consistent row height
+            minHeight: '60px !important',
           },
           '& .MuiDataGrid-cell': {
             padding: '0 16px',
@@ -524,14 +493,12 @@ export function VacationRequestTable({ requests = [], isAdmin = false }: Vacatio
           borderBottom: '1px solid #f0f0f0',
           padding: 0,
         },
-        // Apply green to column headers
         '& .MuiDataGrid-columnHeaderTitle': {
           color: '#00754a',
           fontWeight: 600,
           whiteSpace: 'normal',
           lineHeight: 'normal'
         },
-        // Center the STATUS column cells
         '& .MuiDataGrid-cell--textCenter': {
           display: 'flex',
           justifyContent: 'center',
@@ -546,7 +513,7 @@ export function VacationRequestTable({ requests = [], isAdmin = false }: Vacatio
           columnHeaderHeight={56}
           initialState={{
             pagination: {
-              paginationModel: { page: 0, pageSize: 5 },
+              paginationModel: { page: 0, pageSize: 10 },
             },
             columns: {
               columnVisibilityModel: columnVisibilityModel,
@@ -564,7 +531,7 @@ export function VacationRequestTable({ requests = [], isAdmin = false }: Vacatio
               lineHeight: '1.43rem',
             }
           }}
-          pageSizeOptions={[5, 10, 15]}
+          pageSizeOptions={[10, 25, 50]}
           slots={{ 
             toolbar: CustomToolbarWithProps,
           }}
@@ -572,7 +539,6 @@ export function VacationRequestTable({ requests = [], isAdmin = false }: Vacatio
           disableRowSelectionOnClick
           getRowHeight={() => 'auto'}
           localeText={{
-            // Spanish translations
             filterPanelAddFilter: 'Añadir filtro',
             filterPanelRemoveAll: 'Quitar todos',
             filterPanelDeleteIconLabel: 'Borrar',
