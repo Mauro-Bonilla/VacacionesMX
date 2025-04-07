@@ -13,7 +13,6 @@ export default async function Page() {
 
   const { entitledDays, usedDays, availableVacations, periodEnd} = vacationSummary;
   const requests = await fetchUserRequests();
-  console.log(requests);
 
   return (
     <main>
@@ -22,7 +21,7 @@ export default async function Page() {
           Mis Vacaciones Ordinarias
         </h1>
         <h2 className="text-sm text-gray-500">
-          {periodEnd ? `Vigencia hasta ${new Date(periodEnd).toLocaleDateString('es-MX')}` : 'Vigencia indefinida'}
+          {periodEnd ? `Vigencia hasta ${new Date(periodEnd).toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' })}` : 'Vigencia indefinida'}
         </h2>
       </div>
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
