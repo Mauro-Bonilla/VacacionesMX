@@ -1,8 +1,9 @@
 import { Card } from "@/app/ui/dashboard/cards";
-import { lusitana } from "@/app/ui/fonts";
+import { monserrat } from "@/app/ui/fonts";
 import { fetchVacationSummary } from "../lib/db/services/get-ordinary-vacation-summary";
 import { fetchUserRequests } from "../lib/db/services/get-vacation-request-data";
 import VacationRequestTable from "../ui/components/vacation-requests/vacation-request-table";
+import { Divider } from "@mui/material";
 
 export default async function Page() {
 
@@ -17,7 +18,7 @@ export default async function Page() {
   return (
     <main>
       <div className="flex justify-between items-center mb-4">
-        <h1 className={`${lusitana.className} text-xl md:text-2xl`}>
+        <h1 className={`${monserrat.className} text-xl md:text-2xl font-extrabold`}>
           Mis Vacaciones Ordinarias
         </h1>
         <h2 className="text-sm text-gray-500">
@@ -30,7 +31,8 @@ export default async function Page() {
         <Card title="Vacaciones disponibles" value={availableVacations}/>
       </div>
       <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-4 lg:grid-cols-8"></div>
-      <h1 className={`${lusitana.className} mb-4 text-xl md:text-2xl`}>
+      <Divider className="my-4" />
+      <h1 className={`${monserrat.className} mb-4 text-xl md:text-2xl mt-6`}>
         Mis Solicitudes de vacaciones
       </h1>
       <VacationRequestTable 
