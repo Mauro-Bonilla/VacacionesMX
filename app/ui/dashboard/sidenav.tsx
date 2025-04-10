@@ -2,10 +2,13 @@ import Link from "next/link";
 import NavLinks from "@/app/ui/dashboard/nav-links";
 import CompanyLogo from "@/app/ui/company-logo";
 import { PowerIcon, UserCircleIcon } from "@heroicons/react/24/outline";
-import { userMock } from "@/app/_mocks/user";
+import { auth, signOut } from "@/auth";
+import {User} from "@/app/lib/db/models/users";
 
-export default function SideNav() {
-  const user = userMock;
+export default async function SideNav() {
+  const session = await auth();
+  const user = session?.user as User | undefined;;
+  
   return (
     <div className="flex h-full flex-col px-3 py-4 md:px-2">
       <Link
@@ -25,9 +28,9 @@ export default function SideNav() {
         {/* User info - simplified on mobile */}
         <div className="ml-2 md:ml-3 overflow-hidden">
           <p className="text-xs md:text-sm font-medium text-gray-700 truncate">
-            {user.name || "Usuario"}
+            {user?.name || "Usuario"}
           </p>
-          <p className="text-xs text-gray-500 truncate hidden xs:block">{user.rfc}</p>
+          <p className="text-xs text-gray-500 truncate hidden xs:block">{user?.rfc || ""}</p>
         </div>
       </div>
       
@@ -39,7 +42,12 @@ export default function SideNav() {
         {/* Empty space div - only visible on md and larger screens */}
         <div className="hidden h-auto w-full grow rounded-md bg-gray-50 md:block"></div>
         
-        <form>
+        <form
+          action={async () => {
+            'use server';
+            await signOut({ redirectTo: '/' });
+          }}
+        >
           <button className="flex h-[48px] w-full grow items-center justify-center gap-2 rounded-md bg-gray-50 p-3 text-sm font-medium hover:bg-green-100 hover:text-green-600 md:flex-none md:justify-start md:p-2 md:px-3">
             <PowerIcon className="w-6" />
             <div className="hidden md:block">Cerrar Sesión</div>
