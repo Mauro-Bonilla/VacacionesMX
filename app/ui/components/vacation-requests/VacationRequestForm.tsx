@@ -20,7 +20,6 @@ import FormHelperText from '@mui/material/FormHelperText';
 import Alert from '@mui/material/Alert';
 import CircularProgress from '@mui/material/CircularProgress';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import Stack from '@mui/material/Stack';
 import { EventAvailable as EventAvailableIcon } from '@mui/icons-material';
 import { CalendarToday as CalendarTodayIcon } from '@mui/icons-material';
 import { ViewDay as ViewDayIcon } from '@mui/icons-material';
@@ -91,10 +90,6 @@ const VacationSummaryCard: React.FC<VacationSummaryCardProps> = ({
     <div className="w-full p-4 mb-6 bg-white rounded-lg border border-gray-100 shadow-sm">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center">
-          <div 
-            className={styles.leaveTypeIndicator}
-            style={{ backgroundColor: leaveType.color_code }}
-          ></div>
           <h3 className="text-lg font-medium text-gray-900">{leaveType.name}</h3>
         </div>
       </div>
