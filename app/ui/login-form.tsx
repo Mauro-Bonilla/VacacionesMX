@@ -1,5 +1,4 @@
 'use client';
-
 import { monserrat } from '@/app/ui/fonts';
 import {
   DocumentTextIcon,
@@ -9,16 +8,47 @@ import {
 import { ArrowRightIcon } from '@heroicons/react/20/solid';
 import { Button } from '@/app/ui/button';
 import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { authenticate } from '@/app/lib/actions/auth-actions';
 import { useSearchParams } from 'next/navigation';
+
+// Create a client component for the submit button to access form status
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  
+  return (
+    <Button 
+      className="mt-6 w-full bg-green-600 hover:bg-green-700 transition-colors" 
+      aria-disabled={pending}
+      disabled={pending}
+      type="submit"
+    >
+      {pending ? 'Iniciando...' : 'Iniciar Sesión'} 
+      <ArrowRightIcon className="ml-auto h-5 w-5 text-gray-50" />
+    </Button>
+  );
+}
 
 export default function LoginForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
-  const [errorMessage, formAction, isPending] = useActionState(
-    authenticate,
-    undefined,
+  
+  // Define explicit types for the error message
+  type ErrorMessage = "Credenciales Invalidas." | "Algo salio mal." | undefined;
+  
+  // Use useActionState with proper type annotations (previously useFormState)
+  const [errorMessage, dispatch] = useActionState<
+    ErrorMessage, 
+    FormData
+  >(
+    async (prevState: ErrorMessage, formData: FormData) => {
+      return authenticate(formData);
+    },
+    undefined
   );
+  
+  // Get form status
+  const { pending: isPending } = useFormStatus();
 
   return (
     <div className="relative min-h-full w-full flex items-center justify-center">
@@ -33,7 +63,7 @@ export default function LoginForm() {
       
       {/* Form Container */}
       <form 
-        action={formAction} 
+        action={dispatch} 
         className="space-y-3 w-full max-w-md mx-auto"
       >
         <div className="flex-1 rounded-lg bg-gray-50 px-6 pb-4 pt-8 shadow-md">
@@ -88,14 +118,7 @@ export default function LoginForm() {
             </div>
           </div>
           <input type="hidden" name="redirectTo" value={callbackUrl} />
-          <Button 
-            className="mt-6 w-full bg-green-600 hover:bg-green-700 transition-colors" 
-            aria-disabled={isPending}
-            disabled={isPending}
-          >
-            {isPending ? 'Iniciando...' : 'Iniciar Sesión'} 
-            <ArrowRightIcon className="ml-auto h-5 w-5 text-gray-50" />
-          </Button>
+          <SubmitButton />
           <div
             className="flex h-8 items-end space-x-1 mt-2"
             aria-live="polite"
@@ -110,7 +133,6 @@ export default function LoginForm() {
           </div>
         </div>
       </form>
-
       {/* CSS for the spinner */}
       <style jsx global>{`
         .spinner-container {
