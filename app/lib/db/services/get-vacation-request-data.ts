@@ -1,5 +1,5 @@
 import postgres from 'postgres';
-import { userMock } from '../../../_mocks/user';
+import { getCurrentUserRfc } from '@/app/utils/get-current-user';
 import { VacationRequest, DayDetails } from '../models/requestTypes';
 import { format } from 'date-fns';
 
@@ -69,14 +69,26 @@ const processRequestDates = <T extends {start_date: any, end_date: any}>(request
 };
 
 /**
- * Fetches all vacation requests for a specific user
- * @param userRfc - The RFC (tax ID) of the user
+ * Fetches all vacation requests for the authenticated user
+ * @param userRfc - Optional RFC override (for admin functions)
  * @returns Array of vacation requests with leave type details
  */
 const fetchUserRequests = async (
-  userRfc: string = userMock.rfc,
+  userRfc?: string,
 ): Promise<VacationRequest[]> => {
   try {
+    // Get authenticated user RFC if not provided
+    if (!userRfc) {
+      const currentUserRfc = await getCurrentUserRfc();
+      
+      if (!currentUserRfc) {
+        console.warn('fetchUserRequests: No user RFC available');
+        return []; // Return empty array instead of throwing
+      }
+      
+      userRfc = currentUserRfc;
+    }
+
     const requests = await sql<VacationRequest[]>`
       SELECT 
         vr.id,
@@ -113,21 +125,33 @@ const fetchUserRequests = async (
     return requests.map(processRequestDates);
   } catch (error) {
     console.error('Error fetching user requests:', error);
-    throw new Error('Failed to fetch user requests');
+    return []; // Return empty array instead of throwing
   }
 };
 
 /**
  * Fetches a single vacation request by ID
  * @param requestId - UUID of the request
- * @param userRfc - The RFC (tax ID) of the user
+ * @param userRfc - Optional RFC override (for admin functions)
  * @returns The vacation request or null if not found
  */
 const fetchRequestById = async (
   requestId: string,
-  userRfc: string = userMock.rfc,
+  userRfc?: string,
 ): Promise<VacationRequest | null> => {
   try {
+    // Get authenticated user RFC if not provided
+    if (!userRfc) {
+      const currentUserRfc = await getCurrentUserRfc();
+      
+      if (!currentUserRfc) {
+        console.warn('fetchRequestById: No user RFC available');
+        return null;
+      }
+      
+      userRfc = currentUserRfc;
+    }
+
     const [request] = await sql<(VacationRequest & { day_details?: DayDetails })[]>`
       SELECT 
         vr.id,
@@ -187,7 +211,7 @@ const fetchRequestById = async (
     return processRequestDates(request);
   } catch (error) {
     console.error('Error fetching request details:', error);
-    throw new Error('Failed to fetch request details');
+    return null; // Return null instead of throwing
   }
 };
 

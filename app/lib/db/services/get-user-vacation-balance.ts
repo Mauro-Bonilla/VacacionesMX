@@ -1,5 +1,5 @@
 import postgres from 'postgres';
-import { userMock } from '../../../_mocks/user';
+import { getCurrentUserRfc } from '@/app/utils/get-current-user';
 import { VacationBalance, LeaveTypeBalance, UserVacationBalances } from '../models/vacationBalance';
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
@@ -10,12 +10,21 @@ const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
  * @returns Object containing vacation balances for each leave type
  */
 export async function fetchUserVacationBalances(
-  userRfc: string = userMock.rfc
+  userRfc?: string 
 ): Promise<UserVacationBalances | null> {
   try {
+    if (!userRfc) {
+      const currentUserRfc = await getCurrentUserRfc();
+      
+      if (!currentUserRfc) {
+        console.warn('fetchVacationSummary: No user RFC available');
+        return null;
+      }
+      
+      userRfc = currentUserRfc;
+    }
     const currentDate = new Date();
 
-    // Join vacation_balances with leave_types to get leave type details
     const balances = await sql<(VacationBalance & { 
       leave_type_name: string;
       color_code: string;
@@ -76,7 +85,7 @@ export async function fetchUserVacationBalances(
  */
 export async function getLeaveTypeBalance(
   leaveTypeId: string,
-  userRfc: string = userMock.rfc
+  userRfc?: string
 ): Promise<LeaveTypeBalance | null> {
   const allBalances = await fetchUserVacationBalances(userRfc);
   
@@ -93,7 +102,7 @@ export async function getLeaveTypeBalance(
  * Fetches the ordinary vacation summary (similar to previous implementation)
  */
 export async function fetchVacationSummary(
-  userRfc: string = userMock.rfc
+  userRfc?: string
 ): Promise<any | null> {
   const ordinaryVacationId = '10a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c';
   const balance = await getLeaveTypeBalance(ordinaryVacationId, userRfc);
