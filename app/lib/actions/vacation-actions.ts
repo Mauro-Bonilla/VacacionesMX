@@ -1,13 +1,13 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { userMock } from '@/app/_mocks/user';
 import { createVacationRequest } from '@/app/lib/db/services/create-vacation-request';
 import { fetchUserVacationBalances } from '@/app/lib/db/services/get-user-vacation-balance';
 import { fetchLeaveTypes, getLeaveTypeById } from '@/app/lib/db/services/get-leave-types';
 import { fetchHolidaysForPeriod } from '@/app/lib/db/services/get-holidays';
 import { LeaveType } from '@/app/lib/db/models/leaveTypes';
 import { LeaveTypeBalance } from '@/app/lib/db/models/vacationBalance';
+import { getCurrentUserRfc } from '@/app/utils/get-current-user';
 
 /**
  * Gets all leave types from the database
@@ -113,7 +113,17 @@ export async function getUserVacationBalances(): Promise<{
   error?: string 
 }> {
   try {
-    const balancesData = await fetchUserVacationBalances(userMock.rfc);
+    // Get the authenticated user's RFC
+    const userRfc = await getCurrentUserRfc();
+    
+    if (!userRfc) {
+      return { 
+        success: false, 
+        error: 'No se encontró un usuario autenticado' 
+      };
+    }
+    
+    const balancesData = await fetchUserVacationBalances(userRfc);
     
     if (!balancesData) {
       return { 
@@ -145,6 +155,16 @@ export async function submitVacationRequest(formData: {
   notes?: string;
 }): Promise<{ success: boolean; message: string }> {
   try {
+    // Get the authenticated user's RFC
+    const userRfc = await getCurrentUserRfc();
+    
+    if (!userRfc) {
+      return { 
+        success: false, 
+        message: 'No se encontró un usuario autenticado' 
+      };
+    }
+    
     // Convert string dates to Date objects
     const requestData = {
       leave_type_id: formData.leave_type_id,
@@ -154,7 +174,7 @@ export async function submitVacationRequest(formData: {
     };
     
     // Call the service function to create the request
-    const result = await createVacationRequest(requestData, userMock.rfc);
+    const result = await createVacationRequest(requestData, userRfc);
     
     // Revalidate the dashboard path to reflect the new request
     revalidatePath('/dashboard');

@@ -1,28 +1,30 @@
 import postgres from 'postgres';
-import { userMock } from '../../../_mocks/user';
+import { getCurrentUserRfc } from '@/app/utils/get-current-user';
 import { VacationBalance } from '../models/vacationBalance';
+import type { VacationSummary } from '../models/VacationSummary';
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
-interface VacationSummary {
-  entitledDays: number;
-  usedDays: number;
-  remainingDays: number;
-  periodStart: Date;
-  periodEnd: Date;
-  expiresAt: Date | null;
-  availableVacations: number;
-}
-
 /**
  * Fetches the current vacation summary for a user
- * @param userRfc - The RFC (tax ID) of the user
+ * @param userRfc - Optional RFC override (for admin functions)
  * @returns A vacation summary object with entitled, used, and remaining days
  */
 const fetchVacationSummary = async (
-  userRfc: string = userMock.rfc, 
+  userRfc?: string, 
 ): Promise<VacationSummary | null> => {
   try {
+    if (!userRfc) {
+      const currentUserRfc = await getCurrentUserRfc();
+      
+      if (!currentUserRfc) {
+        console.warn('fetchVacationSummary: No user RFC available');
+        return null;
+      }
+      
+      userRfc = currentUserRfc;
+    }
+    
     const currentDate = new Date();
 
     const vacationBalances = await sql<VacationBalance[]>`
@@ -53,7 +55,7 @@ const fetchVacationSummary = async (
     };
   } catch (error) {
     console.error('Error fetching vacation summary:', error);
-    throw new Error('Error fetching vacation summary');
+    return null; 
   }
 };
 
