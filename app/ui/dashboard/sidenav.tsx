@@ -1,13 +1,21 @@
+'use client';
+
 import Link from "next/link";
 import NavLinks from "@/app/ui/dashboard/nav-links";
 import CompanyLogo from "@/app/ui/company-logo";
 import { PowerIcon, UserCircleIcon } from "@heroicons/react/24/outline";
-import { auth, signOut } from "@/auth";
-import {User} from "@/app/lib/db/models/users";
+import { useAuth } from "@/app/lib/context/auth-context";
+import { useState } from "react";
 
-export default async function SideNav() {
-  const session = await auth();
-  const user = session?.user as User | undefined;;
+export default function SideNav() {
+  const { user, logout } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    await logout();
+    setIsLoggingOut(false);
+  };
   
   return (
     <div className="flex h-full flex-col px-3 py-4 md:px-2">
@@ -42,17 +50,14 @@ export default async function SideNav() {
         {/* Empty space div - only visible on md and larger screens */}
         <div className="hidden h-auto w-full grow rounded-md bg-gray-50 md:block"></div>
         
-        <form
-          action={async () => {
-            'use server';
-            await signOut({ redirectTo: '/' });
-          }}
+        <button 
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+          className="flex h-[48px] w-full grow items-center justify-center gap-2 rounded-md bg-gray-50 p-3 text-sm font-medium hover:bg-green-100 hover:text-green-600 md:flex-none md:justify-start md:p-2 md:px-3"
         >
-          <button className="flex h-[48px] w-full grow items-center justify-center gap-2 rounded-md bg-gray-50 p-3 text-sm font-medium hover:bg-green-100 hover:text-green-600 md:flex-none md:justify-start md:p-2 md:px-3">
-            <PowerIcon className="w-6" />
-            <div className="hidden md:block">Cerrar Sesión</div>
-          </button>
-        </form>
+          <PowerIcon className="w-6" />
+          <div className="hidden md:block">{isLoggingOut ? 'Cerrando sesión...' : 'Cerrar Sesión'}</div>
+        </button>
       </div>
     </div>
   );
