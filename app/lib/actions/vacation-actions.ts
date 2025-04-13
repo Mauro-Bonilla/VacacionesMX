@@ -48,7 +48,7 @@ export async function getHolidaysForPeriod(
   endYear: number = startYear
 ): Promise<{
   success: boolean;
-  holidays?: { date: string, description: string, type: string }[];
+  holidays?: { date: string, description: string, type: string, full_day: boolean }[];
   error?: string
 }> {
   try {
@@ -61,15 +61,90 @@ export async function getHolidaysForPeriod(
       };
     }
     
+    // Add the full_day property to each holiday
+    const holidaysWithFullDay = holidays.map(holiday => ({
+      ...holiday,
+      full_day: true // Assuming all holidays are full-day by default
+    }));
+    
     return {
       success: true,
-      holidays
+      holidays: holidaysWithFullDay
     };
   } catch (error) {
     console.error('Error fetching holidays:', error);
     return {
       success: false,
       error: 'Error al obtener los días festivos'
+    };
+  }
+}
+
+/**
+ * Gets holidays for a specified date range
+ */
+export async function getHolidaysForDateRange(
+  startDate: string,
+  endDate: string
+): Promise<{
+  success: boolean;
+  holidays?: { date: string, description: string, type: string, full_day: boolean }[];
+  error?: string;
+  workingDays?: number;
+}> {
+  try {
+    if (!startDate || !endDate) {
+      return {
+        success: false,
+        error: 'Fechas no proporcionadas'
+      };
+    }
+    
+    // Convert dates to Date objects
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    // Validate dates
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) {
+      return {
+        success: false,
+        error: 'Rango de fechas inválido'
+      };
+    }
+    
+    // For now, simulate holidays until we update the service
+    const startYear = start.getFullYear();
+    const endYear = end.getFullYear();
+    
+    // Fetch holidays from the years covered
+    const holidaysResult = await getHolidaysForPeriod(
+      startYear, 
+      endYear === startYear ? startYear : endYear
+    );
+    
+    if (!holidaysResult.success) {
+      return holidaysResult;
+    }
+    
+    // Filter holidays that fall within the date range
+    const filteredHolidays = (holidaysResult.holidays || []).filter(holiday => {
+      const holidayDate = new Date(holiday.date);
+      return holidayDate >= start && holidayDate <= end;
+    });
+    
+    // Calculate working days (excluding Sundays and holidays)
+    const workingDays = await calculateWorkingDays(startDate, endDate, filteredHolidays);
+    
+    return {
+      success: true,
+      holidays: filteredHolidays,
+      workingDays
+    };
+  } catch (error) {
+    console.error('Error fetching holidays for date range:', error);
+    return {
+      success: false,
+      error: 'Error al obtener los días festivos para el rango de fechas'
     };
   }
 }
@@ -187,4 +262,63 @@ export async function submitVacationRequest(formData: {
       message: 'Error al enviar la solicitud de vacaciones'
     };
   }
+}
+
+/**
+ * Checks if a specific date is a weekend day that should be excluded
+ * We will exclude Sundays (0)
+ * This must be async since it's in a server action file
+ */
+export async function isWeekendDay(date: Date | string): Promise<boolean> {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  const day = dateObj.getDay();
+  // Return true if Sunday (0)
+  return day === 0;
+}
+
+/**
+ * Check if a date is a holiday
+ */
+export async function isHoliday(date: string, holidays: any[]): Promise<boolean> {
+  const dateStr = new Date(date).toISOString().split('T')[0];
+  return holidays.some(h => h.date === dateStr);
+}
+
+/**
+ * Calculate working days (excluding weekends and holidays) between two dates
+ * This is a server-side calculation that must be async
+ */
+export async function calculateWorkingDays(
+  startDate: string, 
+  endDate: string, 
+  holidays: { date: string }[] = []
+): Promise<number> {
+  if (!startDate || !endDate) return 0;
+  
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  
+  // Validate dates
+  if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) {
+    return 0;
+  }
+  
+  let workingDays = 0;
+  const current = new Date(start);
+  
+  // Convert holiday dates to a simple format for quick lookup
+  const holidayDates = new Set(holidays.map(h => h.date));
+  
+  while (current <= end) {
+    // Skip Sundays (0) and holidays
+    const currentDateStr = current.toISOString().split('T')[0];
+    if (current.getDay() !== 0 && !holidayDates.has(currentDateStr)) {
+      workingDays++;
+    }
+    
+    // Move to next day
+    current.setDate(current.getDate() + 1);
+  }
+  
+  return workingDays;
 }

@@ -1,3 +1,4 @@
+// app/lib/db/services/get-holidays.ts
 import postgres from 'postgres';
 
 // Initialize database connection
@@ -8,8 +9,8 @@ const sql = postgres(process.env.POSTGRES_URL!, {
 /**
  * Interface for holiday data
  */
-interface Holiday {
-  holiday_date: Date;
+export interface Holiday {
+  date: string;
   description: string;
   type: string;
   full_day: boolean;
@@ -24,13 +25,18 @@ interface Holiday {
 export async function fetchHolidaysForPeriod(
   startYear: number,
   endYear: number = startYear
-): Promise<{ date: string, description: string, type: string }[]> {
+): Promise<Holiday[]> {
   try {
     // Get the start and end dates for the query
     const startDate = new Date(startYear, 0, 1); // January 1st of startYear
     const endDate = new Date(endYear, 11, 31); // December 31st of endYear
 
-    const holidays = await sql<Holiday[]>`
+    const holidays = await sql<{
+      holiday_date: Date;
+      description: string;
+      type: string;
+      full_day: boolean;
+    }[]>`
       SELECT 
         holiday_date,
         description,
@@ -48,7 +54,8 @@ export async function fetchHolidaysForPeriod(
     return holidays.map(holiday => ({
       date: holiday.holiday_date.toISOString().split('T')[0],
       description: holiday.description,
-      type: holiday.type
+      type: holiday.type,
+      full_day: holiday.full_day
     }));
   } catch (error) {
     console.error('Error fetching holidays:', error);
