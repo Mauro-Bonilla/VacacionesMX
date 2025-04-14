@@ -12,7 +12,6 @@ import { useFormStatus } from 'react-dom';
 import { authenticate } from '@/app/lib/actions/auth-actions';
 import { useSearchParams } from 'next/navigation';
 
-// Create a client component for the submit button to access form status
 function SubmitButton() {
   const { pending } = useFormStatus();
   
@@ -33,26 +32,42 @@ export default function LoginForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
   
-  // Define explicit types for the error message
+  // Tipo para los mensajes de error que mostramos en la UI
   type ErrorMessage = "Credenciales Invalidas." | "Algo salio mal." | undefined;
   
-  // Use useActionState with proper type annotations (previously useFormState)
+  // Tipo que devuelve la función authenticate
+  type AuthenticateResult = "Something went wrong." | "Credenciales Invalidas." | undefined;
+  
   const [errorMessage, dispatch] = useActionState<
     ErrorMessage, 
     FormData
   >(
     async (prevState: ErrorMessage, formData: FormData) => {
-      return authenticate(formData);
+      try {
+        const result = await authenticate(formData) as AuthenticateResult;
+        
+        // Convertir mensaje en inglés a español
+        if (result === "Something went wrong.") {
+          return "Algo salio mal.";
+        }
+        
+        // Devolver mensaje en español directamente
+        if (result === "Credenciales Invalidas.") {
+          return result;
+        }
+        
+        return undefined;
+      } catch (error) {
+        return "Algo salio mal.";
+      }
     },
     undefined
   );
   
-  // Get form status
   const { pending: isPending } = useFormStatus();
 
   return (
     <div className="relative min-h-full w-full flex items-center justify-center">
-      {/* Loading Overlay */}
       {isPending && (
         <div className="fixed inset-0 bg-white bg-opacity-70 flex items-center justify-center z-50">
           <div className="spinner-container">
@@ -61,7 +76,6 @@ export default function LoginForm() {
         </div>
       )}
       
-      {/* Form Container */}
       <form 
         action={dispatch} 
         className="space-y-3 w-full max-w-md mx-auto"
@@ -133,7 +147,6 @@ export default function LoginForm() {
           </div>
         </div>
       </form>
-      {/* CSS for the spinner */}
       <style jsx global>{`
         .spinner-container {
           display: flex;
