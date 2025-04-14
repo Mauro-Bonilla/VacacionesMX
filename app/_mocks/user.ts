@@ -1,4 +1,4 @@
-import { User } from "../lib/models/users";
+import { User } from "../lib/db/models/users";
 
 export const userMock: User = {
     rfc: 'MEGS801205ABC',
