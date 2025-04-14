@@ -1,7 +1,7 @@
 import postgres from 'postgres';
 import { getCurrentUserRfc } from '@/app/utils/get-current-user';
 import { VacationBalance } from '../models/vacationBalance';
-import type { VacationSummary } from '../models/VacationSummary';
+import type { VacationSummary } from '../models/vacationSummary';
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
