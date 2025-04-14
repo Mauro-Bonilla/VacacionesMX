@@ -1,3 +1,4 @@
+// app/lib/context/auth-context.tsx
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
@@ -8,6 +9,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   logout: () => Promise<void>;
+  refetchUser: () => Promise<void>;
 }
 
 // Create the context with a default value
@@ -15,6 +17,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   isLoading: true,
   logout: async () => {},
+  refetchUser: async () => {},
 });
 
 // Custom hook to use the auth context
@@ -28,33 +31,9 @@ interface AuthProviderProps {
 
 export function AuthProvider({ initialUser = null, children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(initialUser);
-  const [isLoading, setIsLoading] = useState<boolean>(!initialUser);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Function to handle user logout
-  const logout = async () => {
-    try {
-      // Call your logout endpoint
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      if (response.ok) {
-        setUser(null);
-        window.location.href = '/'; // Redirect to login page
-      }
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
-  };
-
-  // Load user data if not provided initially
-  useEffect(() => {
-    if (!initialUser) {
-      fetchUser();
-    }
-  }, [initialUser]);
-
+  // Function to fetch user data
   const fetchUser = async () => {
     try {
       setIsLoading(true);
@@ -74,9 +53,50 @@ export function AuthProvider({ initialUser = null, children }: AuthProviderProps
     }
   };
 
+  // Public method to refetch user data
+  const refetchUser = async () => {
+    await fetchUser();
+  };
+  
+  // Function to handle user logout
+  const logout = async () => {
+    try {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (response.ok) {
+        setUser(null);
+        window.location.href = '/'; // Redirect to login page
+      }
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
+  // Load user data if not provided initially
+  useEffect(() => {
+    // If we have initialUser data, use it immediately
+    if (initialUser) {
+      setUser(initialUser);
+      setIsLoading(false);
+    } else {
+      // Otherwise fetch the user data
+      fetchUser();
+    }
+    
+    // Set a maximum loading time
+    const maxLoadingTimer = setTimeout(() => {
+      setIsLoading(false);
+    }, 3000);
+    
+    return () => clearTimeout(maxLoadingTimer);
+  }, [initialUser]);
+
   // Provide the auth context value to children
   return (
-    <AuthContext.Provider value={{ user, isLoading, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, logout, refetchUser }}>
       {children}
     </AuthContext.Provider>
   );
