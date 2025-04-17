@@ -1,7 +1,7 @@
 // app/ui/dashboard/sidenav.tsx
 'use client';
 import Link from "next/link";
-import NavLinks from "@/app/ui/dashboard/nav-links";
+import NavLinks from "@/app/ui/components/dashboard/nav-links";
 import CompanyLogo from "@/app/ui/company-logo";
 import { PowerIcon, UserCircleIcon } from "@heroicons/react/24/outline";
 import { useAuth } from "@/app/lib/context/auth-context";

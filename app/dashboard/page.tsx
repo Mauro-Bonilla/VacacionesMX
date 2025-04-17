@@ -1,8 +1,8 @@
-import { Card } from "@/app/ui/dashboard/cards";
+import { Card } from "@/app/ui/components/dashboard/cards";
 import { monserrat } from "@/app/ui/fonts";
 import { fetchVacationSummary } from "../lib/db/services/get-ordinary-vacation-summary";
 import { fetchUserRequests } from "../lib/db/services/get-vacation-request-data";
-import VacationRequestTable from "../ui/components/vacation-requests/vacation-request-table";
+import VacationRequestTable from "@/app/ui/components/vacation-requests/VacationRequestTable/VacationRequestTable";
 import { Divider } from "@mui/material";
 
 export default async function Page() {
