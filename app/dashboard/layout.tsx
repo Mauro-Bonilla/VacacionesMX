@@ -1,4 +1,4 @@
-import SideNav from "../ui/dashboard/sidenav";
+import SideNav from "@/app/ui/components/dashboard/sidenav";
 
 const LayoutDasboard = ({ children }: { children: React.ReactNode }) => {
   return (

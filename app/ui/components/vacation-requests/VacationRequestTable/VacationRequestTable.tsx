@@ -29,7 +29,7 @@ import {
   GridToolbarProps,
 } from '@mui/x-data-grid';
 import type { RequestStatus, VacationRequest } from "@/app/lib/db/models/requestTypes";
-import { VacationTableSkeleton } from './VacationTableSkeleton';
+import { VacationTableSkeleton } from './VacationRequestTableSkeleton';
 import { useRouter } from 'next/navigation';
 
 // Define the column interface
