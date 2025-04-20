@@ -4,28 +4,11 @@ import Box from '@mui/material/Box';
 import Skeleton from '@mui/material/Skeleton';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { lusitana } from "@/app/ui/fonts";
 
-// Create MUI theme with green colors to match the main component
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: "#00754a",
-      light: "#42ab82",
-      dark: "#00623e",
-      contrastText: "#ffffff",
-    },
-    secondary: {
-      main: "#42ab82",
-      contrastText: "#ffffff",
-    },
-  },
-});
 
 const VacationFormSkeleton = () => {
   return (
-    <ThemeProvider theme={theme}>
       <Box className="space-y-6 mb-8">
         {/* Static Form Title - No longer a skeleton */}
         <Typography
@@ -41,10 +24,8 @@ const VacationFormSkeleton = () => {
         {/* Form Container */}
         <FormSkeleton />
       </Box>
-    </ThemeProvider>
   );
 };
-
 
 const FormSkeleton = () => {
   return (

@@ -2,27 +2,13 @@
 import React from 'react';
 import { 
   Box, 
-  ThemeProvider, 
-  createTheme,
   Stack,
   Skeleton
 } from '@mui/material';
 
-// Create MUI theme with our green color
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#00754a',
-    },
-    secondary: {
-      main: '#42ab82',
-    },
-  }
-});
 
 export const VacationTableSkeleton = () => {
   return (
-    <ThemeProvider theme={theme}>
       <Box sx={{ 
         width: '100%', 
         pb: 5,
@@ -110,7 +96,6 @@ export const VacationTableSkeleton = () => {
           <Skeleton variant="rounded" width={32} height={32} />
         </Box>
       </Box>
-    </ThemeProvider>
   );
 };
 

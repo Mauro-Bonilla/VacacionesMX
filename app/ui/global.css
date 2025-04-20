@@ -20,15 +20,15 @@ input[type='number']::-webkit-outer-spin-button {
 /* Green hover/selected styles */
 @layer utilities {
   .bg-nav-selected {
-    @apply bg-green-50;
+    @apply bg-primary-50;
   }
   .text-nav-selected {
-    @apply text-green-600;
+    @apply text-primary-600;
   }
   .hover\:bg-nav-hover:hover {
-    @apply bg-green-50;
+    @apply bg-primary-50;
   }
   .hover\:text-nav-hover:hover {
-    @apply text-green-600;
+    @apply text-primary-600;
   }
 }

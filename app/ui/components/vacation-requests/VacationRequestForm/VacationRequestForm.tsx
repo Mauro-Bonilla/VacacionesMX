@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { lusitana } from "@/app/ui/fonts";
-import { addDays, format } from "date-fns";
+import { addDays } from "date-fns";
 import VacationFormSkeleton from './VacationFormSkeleton';
 
 // MUI Components
@@ -20,7 +20,6 @@ import FormHelperText from "@mui/material/FormHelperText";
 import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
 import Chip from "@mui/material/Chip";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { EventAvailable as EventAvailableIcon } from "@mui/icons-material";
 import { CalendarToday as CalendarTodayIcon } from "@mui/icons-material";
 import { ViewDay as ViewDayIcon } from "@mui/icons-material";
@@ -49,32 +48,6 @@ interface FormRequestData {
   notes?: string;
 }
 
-// Create MUI theme with green colors from tailwind config
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: "#00754a",
-      light: "#42ab82",
-      dark: "#00623e",
-      contrastText: "#ffffff",
-    },
-    secondary: {
-      main: "#42ab82",
-      contrastText: "#ffffff",
-    },
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: "0.5rem",
-          textTransform: "none",
-          fontWeight: 500,
-        },
-      },
-    },
-  },
-});
 
 // Define props interface for VacationSummaryCard
 interface VacationSummaryCardProps {
@@ -615,7 +588,6 @@ const VacationRequestForm: React.FC = () => {
   }
 
   return (
-    <ThemeProvider theme={theme}>
       <Box className="space-y-6 mb-8">
         <Typography
           variant="h5"
@@ -813,7 +785,6 @@ const VacationRequestForm: React.FC = () => {
           </Box>
         </Box>
       </Box>
-    </ThemeProvider>
   );
 };
 

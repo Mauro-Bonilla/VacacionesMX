@@ -4,7 +4,7 @@ import Image from "next/image";
 export default function CompanyLogo() {
   return (
     <div
-      className={`${lusitana.className} flex flex-row items-center justify-center leading-none text-green-500`}
+      className={`${lusitana.className} flex flex-row items-center justify-center leading-none text-primary-500`}
     >
       <div className="relative">
         <Image
