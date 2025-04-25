@@ -93,7 +93,7 @@ export default function SideNav() {
         <button 
           onClick={handleLogout}
           disabled={isLoggingOut}
-          className="flex h-[48px] w-auto flex-shrink-0 items-center justify-center gap-2 rounded-md bg-gray-50 p-3 text-sm font-medium hover:bg-green-100 hover:text-green-600 md:flex-none md:justify-start md:p-2 md:px-3"
+          className="flex h-[48px] w-auto flex-shrink-0 items-center justify-center gap-2 rounded-md bg-gray-50 p-3 text-sm font-medium hover:bg-primary-100 hover:text-primary-600 md:flex-none md:justify-start md:p-2 md:px-3"
         >
           <PowerIcon className="w-6" />
           <div className="hidden md:block">{isLoggingOut ? 'Cerrando sesión...' : 'Cerrar Sesión'}</div>

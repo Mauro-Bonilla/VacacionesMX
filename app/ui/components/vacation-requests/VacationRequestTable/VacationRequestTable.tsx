@@ -7,14 +7,11 @@ import {
   Typography, 
   useTheme, 
   useMediaQuery, 
-  ThemeProvider, 
-  createTheme,
   Stack,
   Menu,
   MenuItem,
   IconButton,
   Tooltip,
-
 } from '@mui/material';
 import { 
   Add as AddIcon,
@@ -134,18 +131,20 @@ function CustomToolbar({ onStatusFilterChange, activeFilters }: CustomToolbarPro
   return (
     <Box sx={{ 
       p: 2,
-      mb: 3,
+      mb: 2,
       borderRadius: 1,
       boxShadow: '0px 2px 4px -1px rgba(0,0,0,0.1)',
+      borderBottom: 'none',
     }}>
       <GridToolbarContainer sx={{ 
         p: 0, 
-        display: 'flex', 
+        display: 'flex',
         flexDirection: isMobile ? 'column' : 'row',
         gap: isMobile ? 1 : 0
       }}>
         <Box sx={{ 
           flexGrow: 1, 
+          marginBottom: isMobile ? 3 : 4,
           mb: isMobile ? 3 : 4,
           display: 'flex',
           alignItems: 'center',
@@ -237,10 +236,6 @@ function CustomToolbar({ onStatusFilterChange, activeFilters }: CustomToolbarPro
             onClick={handleNewRequest}
             sx={{ 
               ml: isMobile ? 0 : 1, 
-              backgroundColor: '#00754a',
-              '&:hover': {
-                backgroundColor: '#006040',
-              },
               color: 'white',
               width: isMobile ? '100%' : 'auto',
               fontWeight: 500,
@@ -254,32 +249,6 @@ function CustomToolbar({ onStatusFilterChange, activeFilters }: CustomToolbarPro
   );
 }
 
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#00754a',
-    },
-    secondary: {
-      main: '#42ab82',
-    },
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          textTransform: 'none',
-        },
-      },
-    },
-    MuiChip: {
-      styleOverrides: {
-        root: {
-          fontWeight: 500,
-        },
-      },
-    },
-  },
-});
 
 interface VacationRequestTableProps {
   requests: VacationRequest[];
@@ -294,7 +263,6 @@ export function VacationRequestTable({ requests = [], isAdmin = false }: Vacatio
     setIsClient(true);
   }, []);
   
-  const theme = useTheme();
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
   
@@ -462,7 +430,6 @@ export function VacationRequestTable({ requests = [], isAdmin = false }: Vacatio
   }
   
   return (
-    <ThemeProvider theme={theme}>
       <Box sx={{ 
         width: '100%',
         pb: 5,
@@ -554,10 +521,8 @@ export function VacationRequestTable({ requests = [], isAdmin = false }: Vacatio
               labelDisplayedRows: ({ from, to, count }) => `${from}-${to} de ${count}`,
             },
           }}
-          autoHeight
         />
       </Box>
-    </ThemeProvider>
   );
 }
 
