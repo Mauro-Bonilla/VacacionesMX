@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { 
   Box, 
   Button, 
@@ -12,11 +12,16 @@ import {
   MenuItem,
   IconButton,
   Tooltip,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import { 
   Add as AddIcon,
   FilterAlt as FilterAltIcon,
   Close as CloseIcon,
+  MoreVert as MoreVertIcon,
+  Visibility as VisibilityIcon,
+  Cancel as CancelIcon,
 } from '@mui/icons-material';
 import { 
   DataGrid, 
@@ -28,6 +33,8 @@ import {
 import type { RequestStatus, VacationRequest } from "@/app/lib/db/models/requestTypes";
 import { VacationTableSkeleton } from './VacationRequestTableSkeleton';
 import { useRouter } from 'next/navigation';
+import { NotesDialog, CancelRequestDialog } from './VacationRequestTableDialog';
+import { cancelVacationRequest } from '@/app/lib/actions/vacation-request-actions';
 
 // Define the column interface
 interface ColumnDef {
@@ -45,6 +52,7 @@ const columns: ColumnDef[] = [
   { name: "DÍAS CALENDARIO", uid: "calendar_days", sortable: true },
   { name: "ESTADO", uid: "status", sortable: true },
   { name: "FECHA SOLICITUD", uid: "created_at", sortable: true },
+  { name: "ACCIONES", uid: "actions", sortable: false },
 ];
 
 // Define status options with Spanish translations
@@ -168,7 +176,7 @@ function CustomToolbar({ onStatusFilterChange, activeFilters }: CustomToolbarPro
                 <IconButton 
                   size="small" 
                   onClick={clearFilters}
-                  sx={{ color: '#00754a' }}
+                  color="primary"
                 >
                   <CloseIcon fontSize="small" />
                 </IconButton>
@@ -188,8 +196,8 @@ function CustomToolbar({ onStatusFilterChange, activeFilters }: CustomToolbarPro
               fontWeight: 500,
               width: isMobile ? '100%' : 'auto',
               justifyContent: isMobile ? 'flex-start' : 'center',
-              color: activeFilters.length > 0 ? '#00754a' : 'inherit',
-              borderColor: activeFilters.length > 0 ? '#00754a' : 'inherit',
+              color: activeFilters.length > 0 ? 'primary.main' : 'inherit',
+              borderColor: activeFilters.length > 0 ? 'primary.main' : 'inherit',
               m: isMobile ? '8px 0' : '0 16px',
               padding: '8px 16px',
             }}
@@ -232,11 +240,11 @@ function CustomToolbar({ onStatusFilterChange, activeFilters }: CustomToolbarPro
           </Menu>
           <Button 
             variant="contained"
+            color="primary"
             startIcon={<AddIcon />}
             onClick={handleNewRequest}
             sx={{ 
               ml: isMobile ? 0 : 1, 
-              color: 'white',
               width: isMobile ? '100%' : 'auto',
               fontWeight: 500,
             }}
@@ -259,6 +267,23 @@ export function VacationRequestTable({ requests = [], isAdmin = false }: Vacatio
   const [isClient, setIsClient] = useState(false);
   const router = useRouter();
   
+  // State for handling dialogs
+  const [notesDialogOpen, setNotesDialogOpen] = useState(false);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<VacationRequest | null>(null);
+  const [actionsMenuAnchorEl, setActionsMenuAnchorEl] = useState<{ [key: string]: HTMLElement | null }>({});
+  
+  // State for alerts
+  const [alert, setAlert] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error';
+  }>({
+    open: false,
+    message: '',
+    severity: 'success',
+  });
+  
   useEffect(() => {
     setIsClient(true);
   }, []);
@@ -279,6 +304,70 @@ export function VacationRequestTable({ requests = [], isAdmin = false }: Vacatio
   
   const [activeStatusFilters, setActiveStatusFilters] = useState<RequestStatus[]>([]);
   
+  // Handle menu open/close
+  const handleMenuOpen = (event: React.MouseEvent<HTMLButtonElement>, requestId: string) => {
+    event.stopPropagation();
+    setActionsMenuAnchorEl(prev => ({ ...prev, [requestId]: event.currentTarget }));
+  };
+
+  const handleMenuClose = (requestId: string) => {
+    setActionsMenuAnchorEl(prev => ({ ...prev, [requestId]: null }));
+  };
+
+  // Handle view notes
+  const handleViewNotes = (request: VacationRequest) => {
+    setSelectedRequest(request);
+    setNotesDialogOpen(true);
+    // Close menu
+    if (request.id) {
+      handleMenuClose(request.id);
+    }
+  };
+
+  // Handle cancel request
+  const handleCancelRequest = (request: VacationRequest) => {
+    setSelectedRequest(request);
+    setCancelDialogOpen(true);
+    // Close menu
+    if (request.id) {
+      handleMenuClose(request.id);
+    }
+  };
+
+  // Handle cancel confirmation
+  const handleConfirmCancel = async (requestId: string) => {
+    try {
+      const result = await cancelVacationRequest(requestId);
+      
+      if (result.success) {
+        setAlert({
+          open: true,
+          message: 'Solicitud cancelada exitosamente',
+          severity: 'success',
+        });
+        // Close the dialog
+        setCancelDialogOpen(false);
+        
+        // Reload the page to get fresh data
+        router.refresh();
+      } else {
+        throw new Error(result.message);
+      }
+    } catch (error) {
+      setAlert({
+        open: true,
+        message: typeof error === 'string' ? error : 
+          error instanceof Error ? error.message : 'Error al cancelar la solicitud',
+        severity: 'error',
+      });
+    }
+  };
+
+  // Close alert
+  const handleAlertClose = () => {
+    setAlert(prev => ({ ...prev, open: false }));
+  };
+  
   const renderAlignedCell = (content: React.ReactNode) => (
     <Box sx={{ 
       height: '100%', 
@@ -289,6 +378,11 @@ export function VacationRequestTable({ requests = [], isAdmin = false }: Vacatio
       {content}
     </Box>
   );
+  
+  // Determine if a request can be cancelled
+  const canCancelRequest = useCallback((request: VacationRequest): boolean => {
+    return request.status === 'PENDING' || request.status === 'APPROVED';
+  }, []);
   
   const dataGridColumns: GridColDef[] = useMemo(() => [
     { 
@@ -377,7 +471,75 @@ export function VacationRequestTable({ requests = [], isAdmin = false }: Vacatio
         </Typography>
       ),
     },
-  ], []);
+    {
+      field: 'actions',
+      headerName: 'ACCIONES',
+      width: 100,
+      sortable: false,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params: GridRenderCellParams<VacationRequest>) => {
+        const request = params.row as VacationRequest;
+        const requestId = request.id || '';
+        
+        return (
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'center',
+            alignItems: 'center',
+            width: '100%',
+            height: '100%'
+          }}>
+            <IconButton
+              size="small"
+              onClick={(event) => handleMenuOpen(event, requestId)}
+              aria-haspopup="true"
+              aria-label="Acciones"
+              color="primary"
+            >
+              <MoreVertIcon />
+            </IconButton>
+            <Menu
+              keepMounted
+              anchorEl={actionsMenuAnchorEl[requestId] || null}
+              open={Boolean(actionsMenuAnchorEl[requestId])}
+              onClose={() => handleMenuClose(requestId)}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'right',
+              }}
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+              PaperProps={{
+                sx: { minWidth: 150 }
+              }}
+            >
+              <MenuItem 
+                onClick={() => handleViewNotes(request)}
+                dense
+              >
+                <VisibilityIcon fontSize="small" sx={{ mr: 1 }} color="primary" />
+                Ver detalles
+              </MenuItem>
+              
+              {canCancelRequest(request) && (
+                <MenuItem 
+                  onClick={() => handleCancelRequest(request)}
+                  dense
+                  sx={{ color: 'error.main' }}
+                >
+                  <CancelIcon fontSize="small" sx={{ mr: 1 }} />
+                  Cancelar
+                </MenuItem>
+              )}
+            </Menu>
+          </Box>
+        );
+      },
+    },
+  ], [actionsMenuAnchorEl, canCancelRequest, handleCancelRequest, handleMenuClose, handleMenuOpen, handleViewNotes]);
   
   const rows = useMemo(() => {
     if (!requests || !Array.isArray(requests)) return [];
@@ -399,7 +561,8 @@ export function VacationRequestTable({ requests = [], isAdmin = false }: Vacatio
       total_days: true,
       calendar_days: true,
       status: true,
-      created_at: true
+      created_at: true,
+      actions: true
     };
   }, []);
   
@@ -461,7 +624,7 @@ export function VacationRequestTable({ requests = [], isAdmin = false }: Vacatio
           padding: 0,
         },
         '& .MuiDataGrid-columnHeaderTitle': {
-          color: '#00754a',
+          color: 'primary.main',
           fontWeight: 600,
           whiteSpace: 'normal',
           lineHeight: 'normal'
@@ -521,7 +684,39 @@ export function VacationRequestTable({ requests = [], isAdmin = false }: Vacatio
               labelDisplayedRows: ({ from, to, count }) => `${from}-${to} de ${count}`,
             },
           }}
+          autoHeight
         />
+        
+        {/* Dialogs */}
+        <NotesDialog 
+          open={notesDialogOpen}
+          onClose={() => setNotesDialogOpen(false)}
+          request={selectedRequest}
+        />
+        
+        <CancelRequestDialog
+          open={cancelDialogOpen}
+          onClose={() => setCancelDialogOpen(false)}
+          request={selectedRequest}
+          onConfirm={handleConfirmCancel}
+        />
+        
+        {/* Alerts */}
+        <Snackbar
+          open={alert.open}
+          autoHideDuration={6000}
+          onClose={handleAlertClose}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert 
+            onClose={handleAlertClose} 
+            severity={alert.severity}
+            variant="filled"
+            sx={{ width: '100%' }}
+          >
+            {alert.message}
+          </Alert>
+        </Snackbar>
       </Box>
   );
 }
