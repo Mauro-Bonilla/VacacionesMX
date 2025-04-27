@@ -16,8 +16,6 @@ const config: Config = {
       colors: {
         // Use semantic color naming
         primary: colors.primary,
-        // Keep green for backward compatibility
-        green: colors.primary,
         grey: colors.grey,
       },
     },
