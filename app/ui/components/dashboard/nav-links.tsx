@@ -2,24 +2,40 @@
 import {
   HomeIcon,
   DocumentDuplicateIcon,
+  ClipboardDocumentCheckIcon
 } from '@heroicons/react/24/outline';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-
-// Map of links to display in the side navigation.
-// Depending on the size of the application, this would be stored in a database.
-const links = [
-  { name: 'Inicio', href: '/dashboard', icon: HomeIcon },
-  {
-    name: 'Solicitar vacaciones',
-    href: '/dashboard/form',
-    icon: DocumentDuplicateIcon,
-  },
-];
+import { useAuth } from '@/app/lib/context/auth-context';
 
 export default function NavLinks() {
   const pathname = usePathname();
+  const { user } = useAuth();
+  
+  // Common links
+  const commonLinks = [
+    { name: 'Inicio', href: '/dashboard', icon: HomeIcon },
+    {
+      name: 'Solicitar vacaciones',
+      href: '/dashboard/form',
+      icon: DocumentDuplicateIcon,
+    },
+  ];
+  
+  // Admin-only links
+  const adminLinks = [
+    {
+      name: 'Admin',
+      href: '/dashboard/admin',
+      icon: ClipboardDocumentCheckIcon,
+    },
+  ];
+  
+  // Determine which links to show based on user role
+  const links = user?.is_admin 
+    ? [...commonLinks, ...adminLinks] 
+    : commonLinks;
   
   return (
     <>
