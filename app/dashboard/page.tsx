@@ -8,6 +8,7 @@ import { Divider } from "@mui/material";
 export default async function Page() {
 
   const vacationSummary = await fetchVacationSummary();
+  console.log('Vacation Summary:', vacationSummary);
   if (!vacationSummary) {
     return <div>Error: Unable to fetch vacation summary.</div>;
   }

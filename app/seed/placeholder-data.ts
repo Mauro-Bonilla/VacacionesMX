@@ -1,4 +1,3 @@
-// lib/placeholder-data.ts
 import { randomUUID } from 'crypto';
 
 // Department Data
