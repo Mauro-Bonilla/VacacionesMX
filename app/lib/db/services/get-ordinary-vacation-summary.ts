@@ -27,16 +27,19 @@ const fetchVacationSummary = async (
     
     const currentDate = new Date();
 
+    // Get the vacation balances for the user where the leave type is "Vacaciones Ordinarias"
     const vacationBalances = await sql<VacationBalance[]>`
-      SELECT *
-      FROM vacation_balances
-      WHERE user_rfc = ${userRfc}
-        AND leave_type_id = '10a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c'
-        AND ${currentDate} >= period_start
-        AND ${currentDate} <= period_end
+      SELECT vb.*
+      FROM vacation_balances vb
+      JOIN leave_types lt ON vb.leave_type_id = lt.id
+      WHERE vb.user_rfc = ${userRfc}
+        AND lt.name = 'Vacaciones Ordinarias'
+        AND ${currentDate} >= vb.period_start
+        AND ${currentDate} <= vb.period_end
     `;
 
     if (!vacationBalances.length) {
+      console.log(`No vacation balances found for user ${userRfc} with type "Vacaciones Ordinarias"`);
       return null;
     }
 
